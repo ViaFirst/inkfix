@@ -17,7 +17,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
         NSApp.mainMenu = MainMenu.make()
         DispatchQueue.global(qos: .utility).async { _ = ClaudeCodeLocator.loginPath } // warm up off the main thread
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-        item.button?.image = NSImage(systemSymbolName: "drop.fill", accessibilityDescription: "Inkfix")
+        item.button?.image = NSImage(systemSymbolName: "character.cursor.ibeam", accessibilityDescription: "Inkfix")
         item.button?.image?.isTemplate = true
         let menu = NSMenu()
         menu.delegate = self

@@ -30,7 +30,7 @@ Then:
 
 1. **Accessibility**: System Settings → Privacy & Security → Accessibility → turn on **Inkfix**.
    It is needed to read the selected text and paste the result back.
-2. **Model** (menu-bar drop → Settings…):
+2. **Model** (menu-bar icon → Settings…):
    - **Claude Code (your subscription)** — install [Claude Code](https://claude.com/code), run `claude` once
      and sign in. Inkfix runs `claude -p` locally with no tools, so requests count against your own plan.
    - **Anthropic API key** — paid per use at console.anthropic.com, stored only in your Keychain.
