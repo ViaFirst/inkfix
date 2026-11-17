@@ -1,92 +1,128 @@
 import AppKit
-import ServiceManagement
 import SwiftUI
 
 @MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWindowDelegate {
-    /// LSUIElement in Info.plist decides: menu-bar utility (no Dock icon) or windowed app.
     static let isMenuBarApp = Bundle.main.object(forInfoDictionaryKey: "LSUIElement") as? Bool ?? false
+    /// Posted by `Inkfix --trigger preview|instant` (testing from the shell, scripts, Shortcuts).
+    static let triggerNotification = Notification.Name("com.viafirst.inkfix.trigger")
 
-    let model = AppModel()
+    private let settings = Settings.shared
+    private let hotKeys = HotKeys()
+    private let services = ServiceProvider()
     private var statusItem: NSStatusItem?
-    private var window: NSWindow?
+    private var settingsWindow: NSWindow?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.mainMenu = MainMenu.make()
-        if Self.isMenuBarApp {
-            let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
-            item.button?.image = NSImage(systemSymbolName: "sparkles", accessibilityDescription: "Inkfix")
-            let menu = NSMenu()
-            menu.delegate = self
-            item.menu = menu
-            statusItem = item
-        } else {
-            showWindow()
-        }
-    }
+        DispatchQueue.global(qos: .utility).async { _ = ClaudeCodeLocator.loginPath } // warm up off the main thread
+        let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
+        item.button?.image = NSImage(systemSymbolName: "drop.fill", accessibilityDescription: "Inkfix")
+        item.button?.image?.isTemplate = true
+        let menu = NSMenu()
+        menu.delegate = self
+        menu.userInterfaceLayoutDirection = AppLayout.direction
+        item.menu = menu
+        statusItem = item
 
-    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
-        if !flag { showWindow() }
-        return true
+        HotKeys.handler = { ImproveController.shared.hotKey($0) }
+        hotKeys.register(settings.hotKey)
+        settings.onHotKeyChange = { [weak self] in
+            guard let self else { return }
+            self.hotKeys.register(self.settings.hotKey)
+        }
+
+        NSApp.servicesProvider = services
+        NSUpdateDynamicServices()
+
+        DistributedNotificationCenter.default().addObserver(forName: Self.triggerNotification, object: nil, queue: .main) { note in
+            let action: HotKeys.Action = (note.object as? String) == "instant" ? .instant : .preview
+            MainActor.assumeIsolated { ImproveController.shared.hotKey(action) }
+        }
+
+        if !Permissions.hasAccessibility || UserDefaults.standard.object(forKey: "didOnboard") == nil {
+            UserDefaults.standard.set(true, forKey: "didOnboard")
+            showSettings()
+        }
     }
 
     // MARK: Menu-bar menu
 
     func menuNeedsUpdate(_ menu: NSMenu) {
         menu.removeAllItems()
-        menu.addItem(item(L("Open Inkfix"), #selector(openWindow)))
+        if !Permissions.hasAccessibility {
+            menu.addItem(item("⚠︎ " + L("Allow Accessibility access…"), #selector(openAccessibility)))
+            menu.addItem(.separator())
+        }
+        let preview = item(L("Improve Selected Text"), #selector(improvePreview))
+        preview.toolTip = settings.hotKey.title
+        menu.addItem(preview)
+        let instant = item(L("Improve and Replace"), #selector(improveInstant))
+        instant.toolTip = settings.hotKey.instantTitle
+        menu.addItem(instant)
+        let hint = NSMenuItem(title: String(format: L("Shortcuts: %@ preview, %@ replace at once"),
+                                            settings.hotKey.title, settings.hotKey.instantTitle),
+                              action: nil, keyEquivalent: "")
+        hint.isEnabled = false
+        menu.addItem(hint)
         menu.addItem(.separator())
-        let login = item(L("Launch at Login"), #selector(toggleLogin))
-        login.state = SMAppService.mainApp.status == .enabled ? .on : .off
-        menu.addItem(login)
+        menu.addItem(item(L("Settings…"), #selector(openSettings), key: ","))
         menu.addItem(.separator())
         menu.addItem(NSMenuItem(title: L("Quit Inkfix"), action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
     }
 
-    private func item(_ title: String, _ action: Selector) -> NSMenuItem {
-        let i = NSMenuItem(title: title, action: action, keyEquivalent: "")
+    private func item(_ title: String, _ action: Selector, key: String = "") -> NSMenuItem {
+        let i = NSMenuItem(title: title, action: action, keyEquivalent: key)
         i.target = self
         return i
     }
 
-    @objc private func openWindow() { showWindow() }
-
-    @objc private func toggleLogin() {
-        let service = SMAppService.mainApp
-        do {
-            if service.status == .enabled { try service.unregister() } else { try service.register() }
-        } catch {
-            NSAlert(error: error).runModal()
-        }
+    // From the menu the frontmost app is still the one being edited (the menu doesn't activate us).
+    @objc private func improvePreview() { ImproveController.shared.hotKey(.preview) }
+    @objc private func improveInstant() { ImproveController.shared.hotKey(.instant) }
+    @objc private func openSettings() { showSettings() }
+    @objc private func openAccessibility() {
+        Permissions.requestAccessibility()
+        Permissions.openSettings(.accessibility)
     }
 
-    // MARK: Window
+    // MARK: Settings window
 
-    private func showWindow() {
-        if window == nil {
-            let w = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 520, height: 360),
-                             styleMask: [.titled, .closable, .miniaturizable, .resizable],
-                             backing: .buffered, defer: false)
-            w.title = "Inkfix"
+    func showSettings() {
+        if settingsWindow == nil {
+            let w = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 520, height: 520),
+                             styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            w.title = L("Inkfix Settings")
             w.isReleasedWhenClosed = false
-            w.contentView = NSHostingView(rootView: ContentView(model: model))
+            let host = NSHostingView(rootView: SettingsView(settings: settings))
+            host.sizingOptions = [.preferredContentSize]
+            w.contentView = host
             w.center()
             w.delegate = self
-            window = w
+            settingsWindow = w
         }
-        if Self.isMenuBarApp { NSApp.setActivationPolicy(.regular) }
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
-        window?.makeKeyAndOrderFront(nil)
+        settingsWindow?.makeKeyAndOrderFront(nil)
     }
 
     func windowWillClose(_ notification: Notification) {
-        // Menu-bar apps go back to no Dock icon and hand focus to the previous app.
-        guard Self.isMenuBarApp else { return }
         NSApp.setActivationPolicy(.accessory)
         NSApp.hide(nil)
     }
 
-    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool {
-        !Self.isMenuBarApp
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        showSettings()
+        return true
+    }
+
+    func applicationShouldTerminateAfterLastWindowClosed(_ sender: NSApplication) -> Bool { false }
+}
+
+/// Services menu entry: right click → Services → Improve with Inkfix.
+final class ServiceProvider: NSObject {
+    @objc func improveText(_ pboard: NSPasteboard, userData: String?, error: AutoreleasingUnsafeMutablePointer<NSString?>) {
+        guard let text = pboard.string(forType: .string) else { return }
+        MainActor.assumeIsolated { ImproveController.shared.service(text: text) }
     }
 }
