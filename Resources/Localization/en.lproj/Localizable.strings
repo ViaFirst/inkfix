@@ -1,0 +1,18 @@
+/* Inkfix: en. Key = English text. */
+
+"Open Inkfix" = "Open Inkfix";
+"Launch at Login" = "Launch at Login";
+"Quit Inkfix" = "Quit Inkfix";
+"Hide Inkfix" = "Hide Inkfix";
+"File" = "File";
+"Close" = "Close";
+"Edit" = "Edit";
+"Undo" = "Undo";
+"Redo" = "Redo";
+"Cut" = "Cut";
+"Copy" = "Copy";
+"Paste" = "Paste";
+"Select All" = "Select All";
+"Hello from Inkfix" = "Hello from Inkfix";
+"Clicked %d times" = "Clicked %d times";
+"Click me" = "Click me";

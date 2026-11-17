@@ -1,0 +1,18 @@
+/* Inkfix: ru. Key = English text. */
+
+"Open Inkfix" = "Открыть Inkfix";
+"Launch at Login" = "Запускать при входе";
+"Quit Inkfix" = "Выйти из Inkfix";
+"Hide Inkfix" = "Скрыть Inkfix";
+"File" = "Файл";
+"Close" = "Закрыть";
+"Edit" = "Правка";
+"Undo" = "Отменить";
+"Redo" = "Повторить";
+"Cut" = "Вырезать";
+"Copy" = "Копировать";
+"Paste" = "Вставить";
+"Select All" = "Выбрать всё";
+"Hello from Inkfix" = "Привет от Inkfix";
+"Clicked %d times" = "Нажато раз: %d";
+"Click me" = "Нажми меня";

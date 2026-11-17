@@ -1,0 +1,18 @@
+/* Inkfix: he. Key = English text. */
+
+"Open Inkfix" = "פתיחת Inkfix";
+"Launch at Login" = "פתיחה בעת ההתחברות";
+"Quit Inkfix" = "יציאה מ־Inkfix";
+"Hide Inkfix" = "הסתרת Inkfix";
+"File" = "קובץ";
+"Close" = "סגירה";
+"Edit" = "עריכה";
+"Undo" = "ביטול פעולה";
+"Redo" = "ביצוע חוזר";
+"Cut" = "גזירה";
+"Copy" = "העתקה";
+"Paste" = "הדבקה";
+"Select All" = "בחירת הכל";
+"Hello from Inkfix" = "שלום מ־Inkfix";
+"Clicked %d times" = "נלחץ %d פעמים";
+"Click me" = "לחצו כאן";
