@@ -104,6 +104,7 @@ final class ImproveController {
         guard let model, let captured else { return }
         task?.cancel()
         model.result = ""
+        model.pending = nil
         model.status = .working
         let mode = model.effectiveMode
         task = Task { [weak self] in
@@ -119,9 +120,16 @@ final class ImproveController {
                 guard !Task.isCancelled, let self, let model = self.model else { return }
                 model.result = result
                 model.status = .done
+                if let pending = model.pending {
+                    model.pending = nil
+                    self.handle(pending)
+                    return
+                }
             } catch {
                 guard !Task.isCancelled, let self, let model = self.model else { return }
+                model.pending = nil
                 model.status = .failed(error.localizedDescription)
+                log.error("improve failed: \(error.localizedDescription, privacy: .public)")
             }
             self?.panel?.fitContent()
         }
@@ -173,19 +181,26 @@ final class ImproveController {
             model.mode = mode
             start()
         case .copy:
+            if isRunning(model) { model.pending = .copy; panel?.fitContent(); return }
             guard model.status == .done else { return }
             TextAccess.copyToClipboard(model.result)
             close()
             Toast.shared.show(L("Copied"), symbol: "doc.on.clipboard")
         case .replace:
+            if isRunning(model) { model.pending = .replace; panel?.fitContent(); return }
             guard model.status == .done, let captured else { return }
             let result = model.result
+            log.notice("replace from popup")
             close()
             Task {
                 let pasted = await TextAccess.replace(captured, with: result)
                 if !pasted { Toast.shared.show(L("Copied. Paste it with ⌘V."), symbol: "doc.on.clipboard") }
             }
         }
+    }
+
+    private func isRunning(_ model: PopupModel) -> Bool {
+        model.status == .working || model.status == .streaming
     }
 
     private func close() {

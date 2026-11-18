@@ -37,6 +37,7 @@ enum TextAccess {
         }
         let anchor = element.flatMap(selectionRect)
 
+        log.notice("capture in \(app?.bundleIdentifier ?? "?", privacy: .public), focused role \(element.flatMap { string($0, kAXRoleAttribute) } ?? "none", privacy: .public)")
         if let element, let selected = string(element, kAXSelectedTextAttribute), !selected.isBlank {
             return CapturedText(text: selected, source: .selection, anchor: anchor, app: app, context: context)
         }
@@ -58,10 +59,17 @@ enum TextAccess {
             copyToClipboard(text)
             return false
         }
-        if let app = captured.app, app != NSWorkspace.shared.frontmostApplication || !app.isActive {
-            app.activate()
-            try? await Task.sleep(nanoseconds: 150_000_000)
+        if let app = captured.app {
+            // Our popup held the keyboard focus; hand it back to the edited app's window and give it a
+            // moment to restore its focused field and selection before pasting.
+            if app != NSWorkspace.shared.frontmostApplication || !app.isActive { app.activate() }
+            for _ in 0..<20 where NSWorkspace.shared.frontmostApplication != app {
+                try? await Task.sleep(nanoseconds: 25_000_000)
+            }
+            try? await Task.sleep(nanoseconds: 200_000_000)
         }
+        let target = focusedElement(app: captured.app)
+        log.notice("replace (\(String(describing: captured.source), privacy: .public)) into \(NSWorkspace.shared.frontmostApplication?.bundleIdentifier ?? "?", privacy: .public), focused role \(target.flatMap { string($0, kAXRoleAttribute) } ?? "none", privacy: .public), selection \(target.flatMap { string($0, kAXSelectedTextAttribute) }?.count ?? -1, privacy: .public) chars")
         await waitForModifiersRelease()
         let pb = NSPasteboard.general
         let saved = PasteboardSnapshot(pb)

@@ -10,6 +10,8 @@ final class PopupModel: ObservableObject {
     @Published var mode: Mode = .auto
     @Published var status: Status = .working
     @Published var showDiff: Bool
+    /// ↩ or ⌘C pressed before the answer finished: done as soon as it arrives.
+    @Published var pending: PopupAction?
     let context: AppContext
     let replaceTitle: String
 
@@ -163,7 +165,13 @@ struct PopupView: View {
 
     private var footer: some View {
         HStack(spacing: 14) {
-            hint("↩", model.replaceTitle, .replace).foregroundStyle(.primary)
+            if model.pending != nil {
+                Label(model.pending == .copy ? L("Will copy when ready…") : L("Will replace when ready…"),
+                      systemImage: "hourglass")
+                    .foregroundStyle(.primary)
+            } else {
+                hint("↩", model.replaceTitle, .replace).foregroundStyle(.primary)
+            }
             hint("⌘C", L("Copy"), .copy)
             hint("⌘D", model.showDiff ? L("Hide changes") : L("Show changes"), .toggleDiff)
             hint("⌘R", L("Retry"), .retry)
