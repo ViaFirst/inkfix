@@ -32,6 +32,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
             self.hotKeys.register(self.settings.hotKey)
         }
 
+        AppTracker.start()
         NSApp.servicesProvider = services
         NSUpdateDynamicServices()
 

@@ -39,7 +39,10 @@ final class ImproveController {
     func service(text: String) {
         guard !text.isBlank else { return }
         if panel != nil { close() }
-        let app = NSWorkspace.shared.frontmostApplication
+        // Calling a service can bring Inkfix forward; the text belongs to the app that was in front before.
+        var app = NSWorkspace.shared.frontmostApplication
+        if app?.processIdentifier == ProcessInfo.processInfo.processIdentifier { app = AppTracker.lastExternal }
+        log.notice("service from \(app?.bundleIdentifier ?? "?", privacy: .public)")
         showPopup(for: CapturedText(text: text, source: .service, anchor: nil, app: app,
                                     context: AppContext.current(app: app)))
     }
@@ -209,5 +212,25 @@ final class ImproveController {
         panel?.orderOut(nil)
         panel = nil
         model = nil
+    }
+}
+
+/// Remembers the last app other than Inkfix that was active: the target of a Services call.
+@MainActor
+enum AppTracker {
+    private(set) static var lastExternal: NSRunningApplication?
+    private static var observer: NSObjectProtocol?
+
+    static func start() {
+        lastExternal = NSWorkspace.shared.frontmostApplication.flatMap(external)
+        observer = NSWorkspace.shared.notificationCenter.addObserver(
+            forName: NSWorkspace.didActivateApplicationNotification, object: nil, queue: .main) { note in
+            let app = note.userInfo?[NSWorkspace.applicationUserInfoKey] as? NSRunningApplication
+            MainActor.assumeIsolated { if let app = app.flatMap(external) { lastExternal = app } }
+        }
+    }
+
+    private static func external(_ app: NSRunningApplication) -> NSRunningApplication? {
+        app.processIdentifier == ProcessInfo.processInfo.processIdentifier ? nil : app
     }
 }

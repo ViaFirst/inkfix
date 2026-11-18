@@ -127,6 +127,9 @@ enum TextAccess {
             let appElement = AXUIElementCreateApplication(app.processIdentifier)
             AXUIElementSetAttributeValue(appElement, "AXManualAccessibility" as CFString, kCFBooleanTrue)
             if let el = element(appElement, kAXFocusedUIElementAttribute) { return el }
+            // Chrome answers the first query after enabling its tree with nothing; ask once more.
+            usleep(60_000)
+            if let el = element(appElement, kAXFocusedUIElementAttribute) { return el }
         }
         return element(AXUIElementCreateSystemWide(), kAXFocusedUIElementAttribute)
     }
