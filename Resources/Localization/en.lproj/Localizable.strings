@@ -49,7 +49,6 @@
 "Paid per use at console.anthropic.com. The key is stored only in your Mac's Keychain." = "Paid per use at console.anthropic.com. The key is stored only in your Mac's Keychain.";
 "Password fields are never read." = "Password fields are never read.";
 "Paste" = "Paste";
-"Path to claude (empty = find automatically)" = "Path to claude (empty = find automatically)";
 "Permissions" = "Permissions";
 "Quit Inkfix" = "Quit Inkfix";
 "Rate limit reached. Try again in a moment." = "Rate limit reached. Try again in a moment.";
@@ -81,3 +80,6 @@
 
 "Will replace when ready…" = "Will replace when ready…";
 "Will copy when ready…" = "Will copy when ready…";
+
+"Path to claude" = "Path to claude";
+"Find automatically" = "Find automatically";

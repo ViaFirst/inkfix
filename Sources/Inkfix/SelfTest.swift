@@ -16,7 +16,7 @@ enum SelfTest {
             return true
         }
         if let i = args.firstIndex(of: "--render-settings"), i + 1 < args.count {
-            render(AnyView(SettingsView(settings: Settings.shared)), size: nil, out: args[i + 1])
+            render(AnyView(SettingsView(settings: Settings.shared)), size: CGSize(width: 520, height: 660), out: args[i + 1])
             return true
         }
         if let i = args.firstIndex(of: "--cli-test"), i + 1 < args.count {

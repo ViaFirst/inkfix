@@ -49,7 +49,6 @@
 "Paid per use at console.anthropic.com. The key is stored only in your Mac's Keychain." = "תשלום לפי שימוש ב־console.anthropic.com. המפתח נשמר רק במחזיק המפתחות של ה־Mac שלך.";
 "Password fields are never read." = "שדות סיסמה לעולם אינם נקראים.";
 "Paste" = "הדבקה";
-"Path to claude (empty = find automatically)" = "נתיב ל־claude (ריק = איתור אוטומטי)";
 "Permissions" = "הרשאות";
 "Quit Inkfix" = "יציאה מ־Inkfix";
 "Rate limit reached. Try again in a moment." = "הגעת למגבלת הבקשות. כדאי לנסות שוב בעוד רגע.";
@@ -81,3 +80,6 @@
 
 "Will replace when ready…" = "יוחלף כשיהיה מוכן…";
 "Will copy when ready…" = "יועתק כשיהיה מוכן…";
+
+"Path to claude" = "הנתיב ל-claude";
+"Find automatically" = "איתור אוטומטי";

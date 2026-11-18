@@ -20,7 +20,7 @@ struct SettingsView: View {
                     Picker(L("Model"), selection: $settings.cliModel) {
                         ForEach(ModelChoice.cli) { Text($0.title).tag($0.id) }
                     }
-                    TextField(L("Path to claude (empty = find automatically)"), text: $settings.cliPath)
+                    TextField(L("Path to claude"), text: $settings.cliPath, prompt: Text(L("Find automatically")))
                     Text(cliStatus).font(.caption).foregroundStyle(.secondary)
                 } else {
                     Picker(L("Model"), selection: $settings.apiModel) {
@@ -75,8 +75,8 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 520)
-        .fixedSize(horizontal: false, vertical: true)
+        // The grouped Form is its own scroll view: let it fill the window and scroll, never size to all content.
+        .frame(minWidth: 480, idealWidth: 520, minHeight: 320, idealHeight: 660)
         .onReceive(timer) { _ in accessibility = Permissions.hasAccessibility }
         .environment(\.layoutDirection, AppLayout.direction == .rightToLeft ? .rightToLeft : .leftToRight)
     }

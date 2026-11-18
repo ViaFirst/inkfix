@@ -91,13 +91,17 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSMenuDelegate, NSWind
 
     func showSettings() {
         if settingsWindow == nil {
-            let w = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 520, height: 520),
-                             styleMask: [.titled, .closable], backing: .buffered, defer: false)
+            let visible = NSScreen.main?.visibleFrame.height ?? 800
+            let height = min(660, visible - 80)
+            let w = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 520, height: height),
+                             styleMask: [.titled, .closable, .resizable], backing: .buffered, defer: false)
             w.title = L("Inkfix Settings")
             w.isReleasedWhenClosed = false
             let host = NSHostingView(rootView: SettingsView(settings: settings))
-            host.sizingOptions = [.preferredContentSize]
+            host.sizingOptions = [.minSize]
             w.contentView = host
+            w.contentMinSize = CGSize(width: 480, height: 320)
+            w.setFrameAutosaveName("InkfixSettings")
             w.center()
             w.delegate = self
             settingsWindow = w
